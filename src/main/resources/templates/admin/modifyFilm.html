@@ -1,0 +1,104 @@
+<script type="text/javascript">
+    /*<![CDATA[*/
+    function submitModifyData() {
+        $("#filmModifyForm").form("submit", {
+            url: "/admin/film/save",
+            onSubmit: function () {
+                var filmModifyContent = CKEDITOR.instances.filmModifyContent.getData();
+                if (filmModifyContent == "") {
+                    $.messager.alert("系统提示", "内容不能为空！");
+                    return false;
+                }
+                return $(this).form("validate");
+            },
+            success: function (result) {
+                var result = eval('(' + result + ')');
+                if (result.success) {
+                    $.messager.alert("系统提示", "保存成功！");
+                    resetFilmModifyPanelValue();
+                } else {
+                    $.messager.alert("系统提示", "保存失败！");
+                }
+            }
+        });
+    }
+
+    function resetFilmModifyPanelValue() {
+        $("#filmModifyName").val("");
+        $("#filmModifyTitle").val("");
+        $("#filmModifyImageFile").val("");
+        $("#filmModifyHotYes").prop("checked", true);
+        CKEDITOR.instances.filmModifyContent.setData("");
+    }
+    /*]]>*/
+</script>
+<div id="filmModifyPanel" class="easyui-panel" title="修改电影信息" style="padding: 10px">
+    <form id="filmModifyForm" method="post" enctype="multipart/form-data">
+        <table cellspacing="20px">
+            <tr>
+                <td width="80px">电影名称：</td>
+                <td>
+                    <input type="text" id="filmModifyName" name="name" style="width: 400px" class="easyui-validatebox"
+                           required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <td width="80px">标题：</td>
+                <td>
+                    <input type="text" id="filmModifyTitle" name="title" style="width: 400px" class="easyui-validatebox"
+                           required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <td width="80px">电影图片：</td>
+                <td>
+                    <input type="hidden" id="imagePath" name="imagePath"/>
+                    <input type="file" id="filmModifyImageFile" name="imageFile"/>
+                </td>
+            </tr>
+            <tr>
+                <td width="80px">设置热门：</td>
+                <td>
+                    <input type="radio" id="filmModifyHotYes" value="1" name="hot" checked="checked"/>是&nbsp;
+                    <input type="radio" id="filmModifyHotNo" value="0" name="hot"/>否&nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td valign="top">内容：</td>
+                <td>
+                    <textarea id="filmModifyContent" name="content" rows="30" cols="80"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="hidden" id="id" name="id"/>
+                    <a href="javascript:submitModifyData()" class="easyui-linkbutton"
+                       data-options="iconCls:'icon-submit'">发布</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script type="text/javascript" th:src="@{/ckeditor/ckeditor.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+    var id = [[${param.id}]];
+    if (id != null) {
+        $.post("/admin/film/findById", {id: id[0]}, function (result) {
+            $("#id").val(result.id);
+            $("#filmModifyName").val(result.name);
+            $("#filmModifyTitle").val(result.title);
+            $("#imagePath").val(result.imagePath);
+            if (result.hot == 1) {
+                $("#filmModifyHotYes").prop("checked", true);
+            } else {
+                $("#filmModifyHotNo").prop("checked", true);
+            }
+            CKEDITOR.instances.filmModifyContent.setData(result.content);
+        }, "json");
+    }
+
+    CKEDITOR.replace("filmModifyContent");
+    /*]]>*/
+</script>

@@ -1,0 +1,131 @@
+<script type="text/javascript">
+    /*<![CDATA[*/
+    var webSiteUrl;
+
+    function searchWebSite() {
+        $("#webSiteDataGrid").datagrid("load", {
+            "name": $("#sWebSiteName").val(),
+            "url": $("#sWebSiteUrl").val()
+        });
+    }
+
+    function openWebSiteAddDialog() {
+        $("#webSiteDialog").dialog("open").dialog("setTitle", "添加网址信息");
+        webSiteUrl = "/admin/webSite/save";
+    }
+
+    function openWebSiteModifyDialog() {
+        var selectedRows = $("#webSiteDataGrid").datagrid("getSelections");
+        if (selectedRows.length != 1) {
+            $.messager.alert("系统提示", "请选择一条要编辑的数据！");
+            return;
+        }
+        var row = selectedRows[0];
+        $("#webSiteForm").form("load", row);
+        $("#webSiteDialog").dialog("open").dialog("setTitle", "编辑网址信息");
+        webSiteUrl = "/admin/webSite/save?id=" + row.id;
+    }
+
+    function deleteWebSite() {
+        var selectedRows = $("#webSiteDataGrid").datagrid("getSelections");
+        if (selectedRows.length == 0) {
+            $.messager.alert("系统提示", "请选择要删除的数据！");
+            return;
+        }
+        var strIds = [];
+        for (var i = 0; i < selectedRows.length; i++) {
+            strIds.push(selectedRows[i].id);
+        }
+        var ids = strIds.join(",");
+        $.messager.confirm("系统提示", "您确定要删除这<font color='red'>" + selectedRows.length + "</font>条数据吗？", function (r) {
+            if (r) {
+                $.post("/admin/webSite/delete", {ids: ids}, function (result) {
+                    if (result.success) {
+                        $.messager.alert("系统提示", "数据已成功删除！");
+                        $("#webSiteDataGrid").datagrid("reload");
+                    } else {
+                        $.messager.alert("系统提示", result.errorInfo);
+                    }
+                }, "json");
+            }
+        });
+    }
+
+    function saveWebSite() {
+        $("#webSiteForm").form("submit", {
+            url: webSiteUrl,
+            onSubmit: function () {
+                return $(this).form("validate");
+            },
+            success: function (result) {
+                var result = eval('(' + result + ')');
+                if (result.success) {
+                    $.messager.alert("系统提示", "保存成功！");
+                    closeWebSiteDialog();
+                    $("#webSiteDataGrid").datagrid("reload");
+                } else {
+                    $.messager.alert("系统提示", "保存失败！");
+                }
+            }
+        });
+    }
+
+    function closeWebSiteDialog() {
+        $("#webSiteDialog").dialog("close");
+        resetWebSiteDialogValue();
+    }
+
+    function resetWebSiteDialogValue() {
+        $("#webSiteName").val("");
+        $("#webSiteUrl").val("");
+    }
+    /*]]>*/
+</script>
+<table id="webSiteDataGrid" title="网址信息管理" class="easyui-datagrid"
+       fitColumns="true" pagination="true" rownumbers="true"
+       url="/admin/webSite/list" fit="true" toolbar="#webSiteToolBar">
+    <thead>
+        <tr>
+            <th field="cb" checkbox="true" align="center"></th>
+            <th field="id" width="50" align="center">主键ID</th>
+            <th field="name" width="200" align="center">网站名称</th>
+            <th field="url" width="200" align="center">网站地址</th>
+        </tr>
+    </thead>
+</table>
+<div id="webSiteToolBar">
+    <div>
+        <a href="javascript:openWebSiteAddDialog()" class="easyui-linkbutton" iconCls="icon-add" plain="true">添加</a>
+        <a href="javascript:openWebSiteModifyDialog()" class="easyui-linkbutton" iconCls="icon-edit" plain="true">修改</a>
+        <a href="javascript:deleteWebSite()" class="easyui-linkbutton" iconCls="icon-remove" plain="true">删除</a>
+    </div>
+    <div>
+        &nbsp;电影网站名称：&nbsp;<input type="text" id="sWebSiteName" size="20" onkeydown="if(event.keyCode==13) searchWebSite()"/>
+        &nbsp;电影网站地址：&nbsp;<input type="text" id="sWebSiteUrl" size="20" onkeydown="if(event.keyCode==13) searchWebSite()"/>
+        <a href="javascript:searchWebSite()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+    </div>
+</div>
+
+<div id="webSiteDialog" class="easyui-dialog" style="width: 500px;height: 180px;padding: 10px 20px"
+     closed="true" buttons="#webSiteDialog-buttons" data-options="onClose:resetWebSiteDialogValue">
+    <form id="webSiteForm" method="post">
+        <table cellspacing="8px">
+            <tr>
+                <td>电影网站名称：</td>
+                <td>
+                    <input type="text" id="webSiteName" name="name" class="easyui-validatebox" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <td>电影网站地址：</td>
+                <td>
+                    <input type="text" id="webSiteUrl" name="url" class="easyui-validatebox" validtype="url" required="true"/>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="webSiteDialog-buttons">
+    <a href="javascript:saveWebSite()" class="easyui-linkbutton" iconCls="icon-ok">保存</a>
+    <a href="javascript:closeWebSiteDialog()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+</div>
